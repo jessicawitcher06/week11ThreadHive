@@ -26,6 +26,11 @@ export const COMMENT_API = {
   DOWNVOTE: (id) => `/comments/${id}/downvote`,
 };
 
+// Search API Endpoints
+export const SEARCH_API = {
+  SEARCH: "/search",
+};
+
 // Subreddit API Endpoints
 export const SUBREDDIT_API = {
   GET_ALL: "/subreddits",

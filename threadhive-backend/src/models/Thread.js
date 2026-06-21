@@ -48,6 +48,8 @@ const ThreadSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+ThreadSchema.index({ title: "text", content: "text" });
+
 const Thread = mongoose.model("Thread", ThreadSchema);
 
 export default Thread;

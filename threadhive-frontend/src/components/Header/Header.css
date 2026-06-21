@@ -25,6 +25,33 @@
   opacity: 0.8;
 }
 
+.header-search {
+  position: relative;
+  flex: 1 1 auto;
+  max-width: 480px;
+  margin: 0 24px;
+}
+
+.header-search-input {
+  border-radius: 20px;
+  background-color: var(--hover-bg, #f6f7f8);
+  border: 1px solid var(--border-light, #edeff1);
+  font-size: 14px;
+}
+
+.header-search-input:focus {
+  background-color: var(--bg-white, #ffffff);
+  border-color: var(--primary-blue, #0079d3);
+  box-shadow: none;
+}
+
+@media (max-width: 767px) {
+  .header-search {
+    margin: 0 12px;
+    max-width: none;
+  }
+}
+
 .hamburger-btn {
   display: none;
   background: none;

@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
 import Header from '../../../src/components/Header/Header';
 import themeReducer from '../../../src/reducers/themeSlice';
+import searchReducer from '../../../src/reducers/searchSlice';
 
 const mockNavigate = vi.fn();
 
@@ -23,6 +24,7 @@ const createMockStore = ({ token = null, user = null, darkMode = false } = {}) =
     reducer: {
       auth: () => ({ token, user, loading: false, error: null, registrationSuccess: false }),
       theme: () => ({ darkMode }),
+      search: searchReducer,
     },
   });
 };
@@ -64,6 +66,16 @@ describe('Header Component', () => {
     renderHeader();
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/register');
+  });
+
+  it('does not render the search input when unauthenticated', () => {
+    renderHeader({ token: null });
+    expect(screen.queryByLabelText(/search threads/i)).not.toBeInTheDocument();
+  });
+
+  it('renders the search input when authenticated', () => {
+    renderHeader({ token: 'fake-token', user: { name: 'Alice' } });
+    expect(screen.getByLabelText(/search threads/i)).toBeInTheDocument();
   });
 
   it('renders dark mode toggle button', () => {
