@@ -15,6 +15,7 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    savedThreads: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Thread' }],
   },
   {
     timestamps: true,

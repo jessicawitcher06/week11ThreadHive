@@ -7,6 +7,7 @@ import subredditRoutes from "./routes/subreddits.js";
 import auth from "./routes/auth.js";
 import commentRoutes from "./routes/comments.js";
 import voteRoutes from "./routes/votes.js";
+import bookmarkRoutes from "./routes/bookmarks.js";
 import errorHandler from "./middleware/errorHandler.js";
 
 import "./models/Thread.js";
@@ -42,6 +43,7 @@ app.use("/api/subreddits", subredditRoutes);
 app.use("/api/auth", auth);
 app.use("/api/comments", commentRoutes);
 app.use("/api", voteRoutes);
+app.use("/api/bookmarks", bookmarkRoutes);
 
 app.use(errorHandler);
 
