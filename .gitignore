@@ -3,8 +3,8 @@ node_modules/
 
 # Environment / secrets
 .env
-.env.*
-!.env.example
+.env.local
+*.env
 
 # Build output
 dist/
@@ -21,3 +21,11 @@ Thumbs.db
 # Verification / test artifacts
 .playwright-mcp/
 search-results.png
+# Editor / OS
+.vscode/
+.DS_Store
+
+# Test & tooling artifacts
+.playwright-mcp/
+coverage/
+saved-tab-with-thread.png

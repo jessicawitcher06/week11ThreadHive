@@ -29,6 +29,11 @@ export const COMMENT_API = {
 // Search API Endpoints
 export const SEARCH_API = {
   SEARCH: "/search",
+// Bookmark API Endpoints
+export const BOOKMARK_API = {
+  SAVE:    (id) => `/bookmarks/${id}`,
+  UNSAVE:  (id) => `/bookmarks/${id}`,
+  GET_ALL: '/bookmarks',
 };
 
 // Subreddit API Endpoints

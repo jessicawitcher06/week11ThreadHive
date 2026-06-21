@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { upvoteThreadThunk, downvoteThreadThunk, generateSummaryThunk } from '../../reducers/threadSlice';
+import { saveThreadThunk, unsaveThreadThunk } from '../../reducers/bookmarkSlice';
 import { Card, Button, Row, Col, Stack } from "react-bootstrap";
 import VoteButtons from '../Shared/VoteButtons';
 import ThreadSummary from './ThreadSummary';
@@ -8,10 +9,16 @@ import './ThreadCard.css';
 
 export default function ThreadCard({ thread, goBack }) {
   const dispatch = useDispatch();
+  const token = useSelector((state) => state.auth?.token ?? null);
+  const savedThreadIds = useSelector(
+    (state) => state.bookmarks?.savedThreadIds ?? [],
+  );
   const [summary, setSummary] = useState('');
   const [loadingSummary, setLoadingSummary] = useState(false);
 
   if (!thread) return <div>No thread found</div>;
+
+  const isSaved = savedThreadIds.includes(thread._id);
 
   const handleUpvote = () => {
     dispatch(upvoteThreadThunk(thread._id));
@@ -35,14 +42,22 @@ export default function ThreadCard({ thread, goBack }) {
     }
   };
 
+  const handleBookmarkToggle = () => {
+    if (isSaved) {
+      dispatch(unsaveThreadThunk(thread._id));
+    } else {
+      dispatch(saveThreadThunk(thread._id));
+    }
+  };
+
   return (
     <Card className="single-thread-card">
       <Card.Body>
         {goBack && (
-          <Button 
-            onClick={goBack} 
-            variant="link" 
-            size="sm" 
+          <Button
+            onClick={goBack}
+            variant="link"
+            size="sm"
             className="back-to-home-btn text-decoration-none"
           >
             <i className="bi bi-arrow-left me-2"></i>Back to Home
@@ -70,17 +85,30 @@ export default function ThreadCard({ thread, goBack }) {
               {thread.content}
             </p>
 
-            {/* Generate Summary Button */}
-            <Button
-              variant="outline-secondary"
-              size="sm"
-              className="mb-3"
-              onClick={handleGenerateSummary}
-              disabled={loadingSummary}
-            >
-              <i className="bi bi-robot me-1"></i>
-              {loadingSummary ? 'Generating...' : 'Generate Summary'}
-            </Button>
+            {/* Action buttons */}
+            <div className="d-flex gap-2 mb-3 flex-wrap">
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={handleGenerateSummary}
+                disabled={loadingSummary}
+              >
+                <i className="bi bi-robot me-1"></i>
+                {loadingSummary ? 'Generating...' : 'Generate Summary'}
+              </Button>
+
+              {token && (
+                <Button
+                  variant={isSaved ? 'secondary' : 'outline-secondary'}
+                  size="sm"
+                  onClick={handleBookmarkToggle}
+                  aria-label={isSaved ? 'Unsave thread' : 'Save thread'}
+                >
+                  <i className={`bi ${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'} me-1`}></i>
+                  {isSaved ? 'Saved' : 'Save'}
+                </Button>
+              )}
+            </div>
 
             {/* AI Summary display */}
             {summary && <ThreadSummary summary={summary} />}
@@ -93,7 +121,7 @@ export default function ThreadCard({ thread, goBack }) {
                 </span>
               </div>
               <div className="d-flex align-items-center gap-2">
-                <i className="bi bi-bookmark thread-meta-icon"></i>
+                <i className="bi bi-collection thread-meta-icon"></i>
                 <span className="badge thread-meta-badge">
                   r/{thread.subreddit?.name ?? "unknown"}
                 </span>

@@ -212,6 +212,25 @@ export const handlers = [
     return HttpResponse.json({ data: newSubreddit }, { status: 201 });
   }),
 
+  // Bookmark endpoints
+  http.get(`${BASE_URL}/bookmarks`, () => {
+    return HttpResponse.json({ success: true, data: mockThreads });
+  }),
+
+  http.post(`${BASE_URL}/bookmarks/:threadId`, ({ params }) => {
+    return HttpResponse.json({
+      success: true,
+      data: { savedThreads: [params.threadId] },
+    });
+  }),
+
+  http.delete(`${BASE_URL}/bookmarks/:threadId`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: { savedThreads: [] },
+    });
+  }),
+
   // User endpoints
   http.get(`${BASE_URL}/users/:id`, ({ params }) => {
     const user = Object.values(mockUsers).find(u => u._id === params.id);

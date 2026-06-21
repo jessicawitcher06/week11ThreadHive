@@ -8,12 +8,23 @@ import { configureStore } from "@reduxjs/toolkit";
 import ThreadList from "../../../src/components/ThreadList/ThreadList";
 import threadReducer from "../../../src/reducers/threadSlice";
 import currentThreadReducer from "../../../src/reducers/selectedThreadSlice";
+import bookmarkReducer from "../../../src/reducers/bookmarkSlice";
 
-const createMockStore = () => {
+const createMockStore = ({ token = null, savedThreadIds = [] } = {}) => {
   return configureStore({
     reducer: {
       threads: threadReducer,
       currentThread: currentThreadReducer,
+      bookmarks: bookmarkReducer,
+      auth: () => ({ token, user: null, loading: false, error: null }),
+    },
+    preloadedState: {
+      bookmarks: {
+        savedThreadIds,
+        savedThreads: [],
+        loading: false,
+        error: null,
+      },
     },
   });
 };
@@ -36,8 +47,8 @@ describe("ThreadList Component", () => {
     },
   ];
 
-  const renderThreadList = (threads = mockThreads) => {
-    const store = createMockStore();
+  const renderThreadList = (threads = mockThreads, storeOptions = {}) => {
+    const store = createMockStore(storeOptions);
     return render(
       <Provider store={store}>
         <BrowserRouter>
@@ -109,5 +120,39 @@ describe("ThreadList Component", () => {
     const { container } = renderThreadList([]);
     const threadCards = container.querySelectorAll(".thread-card");
     expect(threadCards).toHaveLength(0);
+  });
+
+  // Bookmark button tests
+  it("does not show bookmark buttons when user is not logged in", () => {
+    renderThreadList(mockThreads, { token: null });
+    expect(screen.queryByLabelText(/save thread/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/unsave thread/i)).not.toBeInTheDocument();
+  });
+
+  it("shows bookmark buttons when user is logged in", () => {
+    renderThreadList(mockThreads, { token: "test-token" });
+    const saveButtons = screen.getAllByLabelText(/save thread/i);
+    expect(saveButtons).toHaveLength(2);
+  });
+
+  it("bookmark icon is filled (bi-bookmark-fill) when thread is in saved list", () => {
+    renderThreadList(mockThreads, {
+      token: "test-token",
+      savedThreadIds: ["t1"],
+    });
+    const unsaveBtn = screen.getByLabelText("Unsave thread");
+    const icon = unsaveBtn.querySelector("i");
+    expect(icon.classList.contains("bi-bookmark-fill")).toBe(true);
+  });
+
+  it("bookmark icon is outlined (bi-bookmark) when thread is not in saved list", () => {
+    renderThreadList(mockThreads, {
+      token: "test-token",
+      savedThreadIds: [],
+    });
+    const saveBtns = screen.getAllByLabelText("Save thread");
+    const icon = saveBtns[0].querySelector("i");
+    expect(icon.classList.contains("bi-bookmark")).toBe(true);
+    expect(icon.classList.contains("bi-bookmark-fill")).toBe(false);
   });
 });
