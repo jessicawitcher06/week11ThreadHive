@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { http, HttpResponse } from 'msw';
+import { server } from '../../mocks/server';
 import Profile from '../../../src/pages/User/Profile';
 import authReducer from '../../../src/reducers/authSlice';
+import bookmarkReducer from '../../../src/reducers/bookmarkSlice';
 
 const mockNavigate = vi.fn();
 
@@ -17,7 +20,9 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const createMockStore = (user) => {
+const BASE_URL = 'http://localhost:5000/api';
+
+const createMockStore = (user, bookmarkState = {}) => {
   return configureStore({
     reducer: {
       auth: () => ({
@@ -26,6 +31,16 @@ const createMockStore = (user) => {
         loading: false,
         error: null,
       }),
+      bookmarks: bookmarkReducer,
+    },
+    preloadedState: {
+      bookmarks: {
+        savedThreadIds: [],
+        savedThreads: [],
+        loading: false,
+        error: null,
+        ...bookmarkState,
+      },
     },
   });
 };
@@ -100,7 +115,8 @@ describe('Profile', () => {
     const editButton = screen.getByText(/Edit Profile/);
     await user.click(editButton);
 
-    expect(screen.getByText(/Save/)).toBeInTheDocument();
+    // Use exact text to avoid conflict with "Saved" nav tab
+    expect(screen.getByText('✓ Save')).toBeInTheDocument();
     expect(screen.getByText(/Cancel/)).toBeInTheDocument();
   });
 
@@ -159,11 +175,12 @@ describe('Profile', () => {
     renderWithProviders(store);
 
     await user.click(screen.getByText(/Edit Profile/));
-    expect(screen.getByText(/Save/)).toBeInTheDocument();
+    expect(screen.getByText('✓ Save')).toBeInTheDocument();
 
     await user.click(screen.getByText(/Cancel/));
     expect(screen.getByText(/Edit Profile/)).toBeInTheDocument();
-    expect(screen.queryByText(/Save/)).not.toBeInTheDocument();
+    // "✓ Save" button (not the "Saved" nav tab) should be gone
+    expect(screen.queryByText('✓ Save')).not.toBeInTheDocument();
   });
 
   it('should navigate to home when Back to Home is clicked', async () => {
@@ -204,5 +221,58 @@ describe('Profile', () => {
     expect(screen.getByPlaceholderText(/Tell us about yourself/)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/City, Country/)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/https:\/\//)).toBeInTheDocument();
+  });
+
+  // Saved tab tests
+  it('Saved tab shows empty-state message when user has no bookmarks', async () => {
+    const user = userEvent.setup();
+
+    server.use(
+      http.get(`${BASE_URL}/bookmarks`, () => {
+        return HttpResponse.json({ success: true, data: [] });
+      }),
+    );
+
+    const store = createMockStore({ name: 'Test User' });
+    renderWithProviders(store);
+
+    // Nav.Link renders as role="button" in React-Bootstrap
+    await user.click(screen.getByText('Saved'));
+
+    await waitFor(() => {
+      expect(screen.getByText('No saved threads yet.')).toBeInTheDocument();
+    });
+  });
+
+  it('Saved tab renders ThreadList when user has bookmarks', async () => {
+    const user = userEvent.setup();
+
+    server.use(
+      http.get(`${BASE_URL}/bookmarks`, () => {
+        return HttpResponse.json({
+          success: true,
+          data: [
+            {
+              _id: 'saved-thread-1',
+              title: 'My Saved Thread',
+              content: 'Saved content',
+              voteCount: 7,
+              subreddit: { _id: 's1', name: 'webdev' },
+              author: { _id: 'u1', name: 'Alice' },
+              createdAt: '2024-01-01T00:00:00.000Z',
+            },
+          ],
+        });
+      }),
+    );
+
+    const store = createMockStore({ name: 'Test User' });
+    renderWithProviders(store);
+
+    await user.click(screen.getByText('Saved'));
+
+    await waitFor(() => {
+      expect(screen.getByText('My Saved Thread')).toBeInTheDocument();
+    });
   });
 });

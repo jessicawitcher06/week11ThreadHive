@@ -5,6 +5,7 @@ import selectedThreadReducer from '../reducers/selectedThreadSlice';
 import commentReducer from '../reducers/commentSlice';
 import themeReducer from '../reducers/themeSlice';
 import subredditReducer from '../reducers/subredditSlice';
+import bookmarkReducer from '../reducers/bookmarkSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +15,6 @@ export const store = configureStore({
     comments: commentReducer,           // comments for current thread
     theme: themeReducer,                // dark mode theme
     subreddits: subredditReducer,       // all subreddits
+    bookmarks: bookmarkReducer,         // user's saved threads
   },
 });
