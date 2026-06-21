@@ -26,6 +26,9 @@ export const COMMENT_API = {
   DOWNVOTE: (id) => `/comments/${id}/downvote`,
 };
 
+// Search API Endpoints
+export const SEARCH_API = {
+  SEARCH: "/search",
 // Bookmark API Endpoints
 export const BOOKMARK_API = {
   SAVE:    (id) => `/bookmarks/${id}`,
